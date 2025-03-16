@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aplicacíon con Javascript (CRUD Empleados)</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <script src="js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+
+        <br>
+      <div class="row">
+
+        <div class="col-md-5 mb-3">
+            <div class="card">
+                <div class="card-header">Empleados</div>
+                <div class="card-body">
+                    <form action="javascript:void(0)" method="post" onsubmit="aplicacion.Agregar()">
+                        
+                        <div class="mb-2">
+                            <label for="nombre">Nombre:</label>
+                            <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Nombre del empleado" required>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="correo">Correo:</label>
+                            <input type="email" class="form-control" name="correo" id="correo" placeholder="Correo" required>
+                        </div>
+                        
+                        <div class="mb-2 text-end">
+                            <button type="submit" class="btn text-bg-success" >Agregar empleado</button>
+                        </div>
+
+                    </form>
+
+                    
+                </div>
+               
+            </div>
+            
+
+        </div>
+
+        
+
+        <div class="col-md-7 ">
+
+          <div class="table-responsive rounded ">
+            <table class="table table-light border ">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Correo</th>
+                  <th scope="col" colspan="2" class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="empleados">
+
+                                                
+                
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- MODAL EDITAR -->
+    
+     
+     <!-- Modal Body -->
+     <!-- if you want to close by clicking outside the modal, delete the last endpoint:data-bs-backdrop and data-bs-keyboard -->
+     <div class="modal fade"  id="modalEditar" tabindex="-1"  data-bs-keyboard="false"  role="dialog" aria-labelledby="modalTitleId" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-md" role="document" >
+
+
+       
+        <form action="javascript:void(0)" method="post" onsubmit="aplicacion.Actualizar()">
+
+          <div class="modal-content">
+            <div class="modal-header text-bg-warning">
+              <h5 class="modal-title" id="modalTitleId">Editar empleado: </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+            </div>
+  
+            <div class="modal-body">
+              <div class="col-md-2 mb-2">
+                <label for="id_edit">ID:</label>
+                <input type="text" class="form-control" name="id_edit" id="id_edit" placeholder="id" readonly>
+              </div>
+              
+              <div class="mb-2">
+                <label for="nombre_edit">Nombre:</label>
+                <input type="text" class="form-control" name="nombre_edit" id="nombre_edit" placeholder="Nombre del empleado" required>
+            </div>
+  
+            <div class="mb-2">
+                <label for="correo_edit">Correo:</label>
+                <input type="email" class="form-control" name="correo_edit" id="correo_edit" placeholder="Correo" required>
+            </div>
+  
+            
+            </div>
+  
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Cancelar </button>
+              <button type="submit" class="btn btn-success">Actualizar empleado</button>
+            </div>
+          </div>
+
+
+        </form>
+
+
+      </div>
+     </div>
+     
+
+
+     <!-- Optional: Place to the bottom of scripts -->
+     <script>
+      const myModal = new bootstrap.Modal(        
+        document.getElementById("modalEditar"),{ keyboard:false }
+      );
+     </script>
+     
+    <!-- END MODAL EDITAR -->
+
+    <script>
+
+      let url = "http://localhost/empleados2/";
+
+
+      let aplicacion= new function(){
+
+        //referencia a los campos del MODAL ACTUALIZAR
+        this.id_edit = document.querySelector('#id_edit');
+        this.nombre_edit = document.querySelector('#nombre_edit');
+        this.correo_edit = document.querySelector('#correo_edit');
+
+        //referecia a los campos del Formulario para CREATE
+        this.nombre = document.querySelector('#nombre');
+        this.correo = document.querySelector('#correo');
+
+        //Referencia al tbody de la tabla para SHOW para cargar los datos  
+        this.empleados = document.querySelector('#empleados');
+
+        this.Leer = function(){
+          let datos='';
+
+          fetch( url )
+          .then( response => response.json() )
+          .then( respuesta => {
+            respuesta.map( ( empleado, index )=>{
+                  datos+=`
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${empleado.nombre}</td>
+                    <td>${empleado.correo}</td>
+                    <td>
+                      <div class="btn-group" role="group" aria-label="Button group name">
+                          <button  type="button"   class="btn btn-sm btn-primary"  onclick="aplicacion.Editar(${empleado.id})" >Editar</button>
+                          <button  type="button"   class="btn btn-sm btn-danger"  onclick="aplicacion.Borrar(${empleado.id})" >Borrar</button>                  
+                      </div>
+                      </td>
+                    </tr>
+                  `;
+                } )
+
+                return this.empleados.innerHTML= datos;   
+          })
+          .catch( error => console.log( error ) );       
+             
+        }
+
+
+        this.Agregar = function(){
+          console.log( nombre.value );
+          console.log( correo.value );
+
+          if(this.nombre.value == '' || this.correo.value == '' ){
+            alert("Debe llenar todos los campos.");
+            return;
+          }
+
+          let config = {
+            method:"POST",
+            body: JSON.stringify({
+              nombre: this.nombre.value,
+              correo: this.correo.value
+            })
+          }
+
+          fetch("http://localhost/empleados2/?insertar=1", config)
+          .then( respuesta => respuesta.json())
+          .then( respuesta => {
+            console.log(respuesta);
+            this.vaciarInputs();
+            this.Leer();
+          } )
+          .catch( error => console.log(`Error: ${error}`) );
+        }
+
+
+        this.vaciarInputs = function(){
+          document.querySelector('#nombre').value= '';
+          document.querySelector('#correo').value= '';
+        }
+
+
+        this.Borrar = function(id){                    
+            
+            fetch(`http://localhost/empleados2/?borrar=${id}`)
+            .then( response => response.json() )
+            .then( respuesta => {
+              console.log( respuesta );
+              this.Leer();
+            } )
+            .catch(error => console.log(error));
+        }
+
+
+        this.Editar = function(id){
+
+          fetch(`http://localhost/empleados2/?consultar=${id}`)
+          .then(response => response.json())
+          .then( respuesta => {
+            console.log(respuesta);
+            this.id_edit.value = respuesta[0].id;
+            this.nombre_edit.value = respuesta[0].nombre;
+            this.correo_edit.value = respuesta[0].correo;
+          } )
+         myModal.show();
+        }
+
+
+
+        this.Actualizar = function(){
+
+          let configActualizar = {
+            method:'POST',
+            body:JSON.stringify({
+              id:this.id_edit.value,
+              nombre:this.nombre_edit.value,
+              correo:this.correo_edit.value
+            })
+          }
+
+          console.log( configActualizar );
+          
+           fetch(`http://localhost/empleados2/?actualizar=1`, configActualizar)
+          .then(response => response.json() )
+          .then( respuesta => {
+            console.log( respuesta)
+          } )
+          .catch( error => console.log( `Error de actualizacion: ${error}` ) );
+          
+          myModal.hide();
+          this.Leer();
+        }
+
+
+      }
+
+      aplicacion.Leer();
+
+   
+    </script>
+  </body>
+</html>
